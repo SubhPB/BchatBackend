@@ -8,7 +8,7 @@ export interface Book {
 };
 
 import { bookController } from "../controllers/booksController";
-import express, { Express } from "express";
+import express from "express";
 
 const bookRouter = express.Router();
 
