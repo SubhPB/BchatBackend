@@ -11,7 +11,6 @@ let books: Book[] = [
 class BookController {
 
     getBooks(req: Request, res:Response){
-        console.log('ERROR - ')
         return res.json(books)
     };
 
