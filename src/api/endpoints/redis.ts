@@ -12,8 +12,7 @@ const RedisMiddleware: APIMiddleware = {
 
         const redisClient = getRedisClient()
         const allowedMethods = ['POST', 'GET', 'DELETE'];
-        console.log("HOST info. ", req.get('Host'))
-
+        
         if (!redisClient){
             res.status(503).send("Redis service is not availabe at the moment")
         } else if (allowedMethods.includes(req.method)){
@@ -46,11 +45,11 @@ const RedisRouter = ({allowedMethods}: {allowedMethods: Exclude<(typeof HTTPMeth
         router.get('/:key', async (req, res) => {
             const {key} = req.params;
             try {
-                await redis.get(key, (err, result) => {
+                await redis.get(decodeURIComponent(key), (err, result) => {
                     if (result){
                         res.json(result)
                     } else {
-                        res.status(404).send(err?.message || "Not Found!")
+                        res.status(404).send(err?.message || `Not Found`)
                     }
                 })
     
@@ -84,10 +83,14 @@ const RedisRouter = ({allowedMethods}: {allowedMethods: Exclude<(typeof HTTPMeth
     if (allowedMethods.includes('POST')){
         router.post('/', async (req, res) => {
             const searchParams = new URLSearchParams(req.url.split('?')[1]);
-            const {key, value, ex=searchParams.get('ex'), nx=searchParams.get('nx')} = req.body
+            let {key, value, ex=searchParams.get('ex'), nx=searchParams.get('nx')} = req.body
             const expiresAfter = parseInt(ex || '') || parseInt(searchParams.get('ex') || '')|| 12 * 60;
             const NX = nx && parseInt(nx || '') === 1;
             const redis = getRedisClient() as Redis;
+        
+            if (key){
+                key = decodeURIComponent(key)
+            }
 
             try {
                 if (NX){
@@ -106,6 +109,7 @@ const RedisRouter = ({allowedMethods}: {allowedMethods: Exclude<(typeof HTTPMeth
                 }
     
             } catch(error) {
+                console.log("[POST] Error ", error)
                 res.status(500).send(error instanceof Error ? error.message : "Server Error.")
             }
         })
